@@ -1,12 +1,8 @@
 const crypto = require('crypto');
-const db = new Map(
-    [[
-        'kristian', {
-            salt:           'asdgnasldkgjasldgkj',
-            passwordHash:   '5d76ae93d484a5b3e5d2cfa8168887b173e6d1b9584f047c518b644cab5ebb69',
-        }
-    ]]
-);
+
+const gen_salt = () => {
+    return crypto.randomBytes(16).toString('hex');
+}
 
 const sha256 = (password, salt) => {
     let hash = crypto.createHmac('sha256', salt);
@@ -18,9 +14,11 @@ const sha256 = (password, salt) => {
     };
 }
 
-const verify = (username, password) => {
+const verify = (username, password, db) => {
+    console.log(username);
     if (db.has(username)) {
         const userCreds = db.get(username);
+        console.log(userCreds);
         const creds = sha256(password, userCreds.salt);
         console.log(creds.passwordHash);
         console.log(userCreds.passwordHash);
@@ -33,3 +31,4 @@ const verify = (username, password) => {
 
 exports.sha256 = sha256;
 exports.verify = verify;
+exports.gen_salt = gen_salt;

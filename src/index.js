@@ -1,20 +1,23 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const creds = require('./creds');
+const Dao = require('./dao');
 const app = express();
 const port = 3000;
 
-app.use(bodyParser.json());
+// Init the user db
+const user_db = new Dao( new Map() );
+const credentials = creds.sha256('password', creds.gen_salt());
+user_db.set('test',credentials);
+console.log(user_db.has('test'));
 
-app.get('/', (req, res) => res.send('Hello World!'));
-app.post('/', (req, res) => {
+app.use(bodyParser.json());
+app.post('/auth', (req, res) => {
     const user = req.body.user;
     const pass = req.body.pass;
-    const authorized = creds.verify(user, pass);
+    const authorized = creds.verify(user, pass, user_db);
     if (authorized === true) {
-        /*
-         * Talk with the oauth server
-         */
+        // Todo: auth
         res.send('ok');
     } else {
         res.status(403)
@@ -22,4 +25,4 @@ app.post('/', (req, res) => {
     }
 
 });
-app.listen(port, () => console.log(`Example app listening on port ${port}`));
+app.listen(port, () => console.log(`Auth app listening on port ${port}`));
