@@ -15,13 +15,9 @@ const sha256 = (password, salt) => {
 }
 
 const verify = (username, password, db) => {
-    console.log(username);
     if (db.has(username)) {
         const userCreds = db.get(username);
-        console.log(userCreds);
         const creds = sha256(password, userCreds.salt);
-        console.log(creds.passwordHash);
-        console.log(userCreds.passwordHash);
         if (creds.passwordHash === userCreds.passwordHash) {
             return true;
         }

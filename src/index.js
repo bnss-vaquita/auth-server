@@ -1,28 +1,29 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const creds = require('./creds');
-const Dao = require('./dao');
+const auth = require('./auth');
 const app = express();
 const port = 3000;
 
-// Init the user db
-const user_db = new Dao( new Map() );
-const credentials = creds.sha256('password', creds.gen_salt());
-user_db.set('test',credentials);
-console.log(user_db.has('test'));
-
+// Init the app
 app.use(bodyParser.json());
 app.post('/auth', (req, res) => {
-    const user = req.body.user;
-    const pass = req.body.pass;
-    const authorized = creds.verify(user, pass, user_db);
-    if (authorized === true) {
-        // Todo: auth
-        res.send('ok');
-    } else {
-        res.status(403)
-            .send('Username or Password invalid');
-    }
-
+    auth.auth(req.body)
+        .then((token) => {
+            const response = {access_token: token};
+            res.setHeader('Content-Type', 'application/json');
+            res.send(response)
+        })
+        .catch((reason) => {
+            switch (reason) {
+                case 'INVAlID_USER_CREDS':
+                    res.status(401)
+                        .send('Username or Password invalid\n');
+                    break;
+                default:
+                    res.status(400)
+                        .send(`${reason}\n`)
+            }
+        });
 });
+
 app.listen(port, () => console.log(`Auth app listening on port ${port}`));
