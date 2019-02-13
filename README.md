@@ -1,5 +1,5 @@
 # auth-server
-A simple authentication server
+A simple OAuth2-compliant authentication server, built as part of the Building Networked Systems Security (EP2520) course @ KTH. 
 
 ## Testing
 Generate a private key, and save it in a folder called `secrets` in the project dir. Unsing openssl:
