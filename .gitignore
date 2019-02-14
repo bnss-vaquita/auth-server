@@ -1,2 +1,5 @@
 node_modules
-secrets 
+/.blackbox/pubring.gpg~
+/.blackbox/pubring.kbx~
+/.blackbox/secring.gpg
+/keys/private.pem
