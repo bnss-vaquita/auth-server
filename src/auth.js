@@ -1,3 +1,4 @@
+require('dotenv').config()
 const creds = require('./creds');
 const Dao = require('./dao');
 const fs   = require('fs');
@@ -7,7 +8,8 @@ const uuidv4 = require('uuid/v4');
 // Init values from env or use defaults
 const ISSUER = process.env.ISSUER || 'dev-auth-server';
 const EXP = process.env.EXP || '1h';
-const priv_key = fs.readFileSync(__dirname + '/../keys/private.pem');
+const KEY_DIR = process.env.KEY_DIR || 'keys';
+const priv_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/private.pem`);
 
 // Init the user db with a default
 const user_db = new Dao( new Map() );
