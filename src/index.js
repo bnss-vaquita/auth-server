@@ -8,6 +8,10 @@ const port = 3000;
 app.use(bodyParser.json());
 app.post('/auth', (req, res) => {
     auth.auth(req.body)
+        .then((options) => {
+            const file_hash = req.body.file_hash;
+            return auth.sign_token({file_hash: file_hash},options);
+        })
         .then((token) => {
             const response = {access_token: token};
             res.setHeader('Content-Type', 'application/json');

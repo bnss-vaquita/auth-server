@@ -7,7 +7,7 @@ const uuidv4 = require('uuid/v4');
 // Init values from env or use defaults
 const ISSUER = process.env.ISSUER || 'dev-auth-server';
 const EXP = process.env.EXP || '1h';
-const priv_key = fs.readFileSync(__dirname + '/../secrets/private.pem');
+const priv_key = fs.readFileSync(__dirname + '/../keys/private.pem');
 
 // Init the user db with a default
 const user_db = new Dao( new Map() );
@@ -31,8 +31,9 @@ const signOptions = (sub, aud) => (
         algorithm: 'RS256'
     });
 
-const payload = () => (
+const payload = (data = {}) => (
     {
+        ...data,
         jti: uuidv4(),
         token_type: 'bearer',
     });
@@ -57,11 +58,8 @@ const eval_pass_grant = (request) => {
                 reject('INVALID_AUDIENCE');
             }
             const user = user_db.get(username);
-            const token = jwt.sign(
-                payload(), priv_key,
-                signOptions(user.uuid, audience)
-            );
-            resolve(token)
+            const options = signOptions(user.uuid, audience);
+            resolve(options)
 
         } else {
             reject('INVALID_REQUEST');
@@ -69,12 +67,19 @@ const eval_pass_grant = (request) => {
     });
 }
 
+exports.sign_token = (data, options) => {
+    const token = jwt.sign(payload(data), priv_key, options);
+    return token;
+};
+
 exports.auth = (request) =>
     new Promise( (resolve, reject) => {
         switch (request.grant_type){
             case 'password':
                 eval_pass_grant(request)
-                    .then((token) => resolve(token))
+                    .then((options) =>
+                        resolve(options)
+                    )
                     .catch((reason) => {
                         reject(reason);
                     });
@@ -83,3 +88,5 @@ exports.auth = (request) =>
                 reject('INVALID_GRANT_TYPE');
         }
     });
+
+
