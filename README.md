@@ -13,6 +13,7 @@ openssl rsa -in private.pem -pubout -outform PEM -out public.pem
 ```
 Then, add `KEY_DIR=secrets` to a `.env` file, so that the app loads your keys. 
 
+Use the private key to create and sign your own certificate, and name it `local.auth.crt`. 
 
 Start the server. The following will elicit a correct authentication: 
 
