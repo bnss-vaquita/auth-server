@@ -18,7 +18,7 @@ Use the private key to create and sign your own certificate, and name it `local.
 Start the server. The following will elicit a correct authentication: 
 
 ``` bash
-curl -i -d '{"username": "test", "password": "password", "client_id": "test_client", "client_secret": "secret", "grant_type":"password"}' -H "Content-Type: application/json" http://localhost:3000/auth 
+curl -k -i -d '{"username": "test", "password": "password", "client_id": "test_client", "client_secret": "secret", "grant_type":"password"}' -H "Content-Type: application/json" https://localhost:3443/auth 
 ```
 You can verify this using the public key. 
 
