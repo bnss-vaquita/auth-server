@@ -1,2 +1,1 @@
 keys/auth.acme.com.pem
-keys/private.pem
