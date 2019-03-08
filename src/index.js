@@ -3,20 +3,26 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const auth = require('./auth');
+const jwt = require('jsonwebtoken');
+const tfa = require('./tfa');
+const tfaManager = require('./tfamanager').manager;
+
 const app = express();
+const ip = '127.0.1.1';
 const http_port = 3000;
 const https_port = 3443;
 
-const CRT = process.env.CRT_NAME || 'local.auth.crt';
-const CA_CRT = process.env.CA_CRT_NAME || 'local.auth.crt';
-const HOSTNAME = process.env.HOSTNAME || 'auth.acme';
+const KEY_DIR = process.env.KEY_DIR || 'keys';
+const CRT = process.env.CRT_NAME || 'auth.acme.com.crt';
+const CA_CRT = process.env.CA_CRT_NAME || 'ca.crt';
+const HOSTNAME = process.env.HOSTNAME || 'auth.acme.com';
 
 const options = {
-    key: fs.readFileSync(`${__dirname}/../keys/private.pem`),
-    cert: fs.readFileSync(`${__dirname}/../keys/${CRT}`),
+    key: fs.readFileSync(`${__dirname}/../${KEY_DIR}/auth.acme.com.pem`),
+    cert: fs.readFileSync(`${__dirname}/../${KEY_DIR}/${CRT}`),
     requestCert: true,
     rejectUnauthorized: false,
-    ca: [ fs.readFileSync(`${__dirname}/../keys/${CA_CRT}`) ]
+    ca: [ fs.readFileSync(`${__dirname}/../${KEY_DIR}/${CA_CRT}`) ]
 };
 
 // HTTPS Only
@@ -41,16 +47,32 @@ app.get('/', (req, res) => {
         res.send('Access Denied!');
     }
 });
+
+
+app.get('/2fa', (req, res) => {
+    const id = req.query.id;
+    const token = req.query.tokenid;
+    res.send(tfa.html(id, token));
+});
+
 app.post('/auth', (req, res) => {
     auth.auth(req.body)
         .then((options) => {
-            const file_hash = req.body.file_hash;
-            return auth.sign_token({file_hash: file_hash},options);
+            const payload = req.body.payload;
+            return auth.sign_token({payload},options);
         })
         .then((token) => {
-            const response = {access_token: token};
-            res.setHeader('Content-Type', 'application/json');
-            res.send(response)
+            // Valid client creds
+            if (req.client.authorized) {
+                const response = {access_token: token};
+                res.setHeader('Content-Type', 'application/json');
+                res.send(response)
+            }
+            // Process TOPT
+            else {
+                const tokenid = tfaManager.addToken(token);
+                res.redirect(`https://${HOSTNAME}:${https_port}/2fa?id=${req.body.username}&tokenid=${tokenid}`);
+            }
         })
         .catch((reason) => {
             switch (reason) {
@@ -64,5 +86,5 @@ app.post('/auth', (req, res) => {
             }
         });
 });
-app.listen(http_port, () => console.log(`Listening on HTTP-port ${http_port}`));
-https.createServer(options, app).listen(https_port, () => console.log(`Auth app listening on port ${https_port}`));
+app.listen(http_port, ip, () => console.log(`HTTP on ${ip}:${http_port}`));
+https.createServer(options, app).listen(https_port, ip, () => console.log(`HTTPS on ${ip}:${https_port}`));

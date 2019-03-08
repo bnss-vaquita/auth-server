@@ -8,8 +8,11 @@ const uuidv4 = require('uuid/v4');
 // Init values from env or use defaults
 const ISSUER = process.env.ISSUER || 'dev-auth-server';
 const EXP = process.env.EXP || '1h';
+const KEY_DIR = process.env.KEY_DIR || 'keys';
 
-const priv_key = fs.readFileSync(`${__dirname}/../keys/private.pem`);
+const priv_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/resc.acme.com.pem`);
+const pub_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/resc.acme.com.pub.pem`);
+
 
 // Init the user db with a default
 const user_db = new Dao( new Map() );
@@ -42,11 +45,12 @@ const payload = (data = {}) => (
 
 // Evaluate the password grant
 const eval_pass_grant = (request) => {
-    const audience = request.audience || 'dev_resource_server',
+    const audience = request.audience || 'resc.acme.com',
         client_id = request.client_id,
         client_secret = request.client_secret,
         username = request.username,
-        password = request.password;
+        password = request.password,
+        subject = request.subject || username;
 
     return new Promise((resolve, reject) => {
         if (client_id && client_secret && username && password) {
@@ -56,17 +60,21 @@ const eval_pass_grant = (request) => {
             if (!creds.verify(username, password, user_db)) {
                 reject('INVAlID_USER_CREDS');
             }
-            if (audience != 'dev_resource_server') {
+            if (audience != 'resc.acme.com') {
                 reject('INVALID_AUDIENCE');
             }
             const user = user_db.get(username);
-            const options = signOptions(user.uuid, audience);
+            const options = signOptions(subject, audience);
             resolve(options)
 
         } else {
             reject('INVALID_REQUEST');
         }
     });
+}
+
+exports.verify_token = (token) => {
+    return jwt.verify(token, pub_key);
 }
 
 exports.sign_token = (data, options) => {
