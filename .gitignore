@@ -4,3 +4,4 @@ node_modules
 /.blackbox/secring.gpg
 /keys/private.pem
 .env
+/keys/auth.acme.com.pem
