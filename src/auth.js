@@ -10,8 +10,8 @@ const ISSUER = process.env.ISSUER || 'dev-auth-server';
 const EXP = process.env.EXP || '1h';
 const KEY_DIR = process.env.KEY_DIR || 'keys';
 
-const priv_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/resc.acme.com.pem`);
-const pub_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/resc.acme.com.pub.pem`);
+const priv_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/auth.acme.com.pem`);
+const pub_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/auth.acme.com.pub.pem`);
 
 
 // Init the user db with a default
