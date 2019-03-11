@@ -1,5 +1,5 @@
 # auth-server
-A simple OAuth2-compliant authentication server, built as part of the Building Networked Systems Security (EP2520) course @ KTH. 
+A simple OAuth2-compliant authorization server, built as part of the Building Networked Systems Security (EP2520) course @ KTH. 
 
 ## Testing
 In order to test, you will need a public/private pair of RSA keys. The keys for this project are encrypted using black box. 
