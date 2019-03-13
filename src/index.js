@@ -4,7 +4,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const auth = require('./auth');
 const jwt = require('jsonwebtoken');
-const tfa = require('./tfa');
 const tfaManager = require('./tfamanager').manager;
 
 const app = express();
@@ -48,13 +47,6 @@ app.get('/', (req, res) => {
     }
 });
 
-
-app.get('/2fa', (req, res) => {
-    const id = req.query.id;
-    const token = req.query.tokenid;
-    res.send(tfa.html(id, token));
-});
-
 app.post('/auth', (req, res) => {
     auth.auth(req.body)
         .then((options) => {
@@ -62,17 +54,9 @@ app.post('/auth', (req, res) => {
             return auth.sign_token({payload},options);
         })
         .then((token) => {
-            // Valid client creds
-            if (req.client.authorized) {
-                const response = {access_token: token};
-                res.setHeader('Content-Type', 'application/json');
-                res.send(response)
-            }
-            // Process TOPT
-            else {
-                const tokenid = tfaManager.addToken(token);
-                res.redirect(`https://${HOSTNAME}:${https_port}/2fa?id=${req.body.username}&tokenid=${tokenid}`);
-            }
+            const response = {access_token: token};
+            res.setHeader('Content-Type', 'application/json');
+            res.send(response)
         })
         .catch((reason) => {
             switch (reason) {
@@ -85,6 +69,7 @@ app.post('/auth', (req, res) => {
                         .send(`${reason}\n`)
             }
         });
+
 });
 app.listen(http_port, ip, () => console.log(`HTTP on ${ip}:${http_port}`));
 https.createServer(options, app).listen(https_port, ip, () => console.log(`HTTPS on ${ip}:${https_port}`));

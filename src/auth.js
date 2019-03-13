@@ -6,21 +6,13 @@ const jwt = require('jsonwebtoken');
 const uuidv4 = require('uuid/v4');
 
 // Init values from env or use defaults
-const ISSUER = process.env.ISSUER || 'dev-auth-server';
+const ISSUER = process.env.ISSUER || 'auth.acme.com';
 const EXP = process.env.EXP || '1h';
 const KEY_DIR = process.env.KEY_DIR || 'keys';
 
 const priv_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/auth.acme.com.pem`);
 const pub_key = fs.readFileSync(`${__dirname}/../${KEY_DIR}/auth.acme.com.pub.pem`);
 
-
-// Init the user db with a default
-const user_db = new Dao( new Map() );
-const _usr_credentials = {
-    uuid: uuidv4(),
-    ...creds.sha256('password', creds.gen_salt())
-};
-user_db.set('test', _usr_credentials);
 
 // Init the client db with a default
 const client_db = new Dao( new Map() );
@@ -57,16 +49,20 @@ const eval_pass_grant = (request) => {
             if (!creds.verify(client_id, client_secret, client_db)) {
                 reject('INVALID_CLIENT_CREDS');
             }
-            if (!creds.verify(username, password, user_db)) {
-                reject('INVAlID_USER_CREDS');
-            }
             if (audience != 'resc.acme.com') {
                 reject('INVALID_AUDIENCE');
             }
-            const user = user_db.get(username);
-            const options = signOptions(subject, audience);
-            resolve(options)
-
+            console.log(`verifying ${username}`);
+            creds.verify_user(username, password)
+                .then(_ => {
+                    console.log(`PASSWORD CORRECT!`);
+                    const options = signOptions(subject, audience);
+                    resolve(options)
+                })
+                .catch( _ => {
+                    console.log(`PASSWORD INCORRECT!`);
+                    reject('INVALID_USER_CREDS')
+                });
         } else {
             reject('INVALID_REQUEST');
         }
@@ -95,6 +91,7 @@ exports.auth = (request) =>
                     });
                 break;
             default:
+                console.log(request.grant_type);
                 reject('INVALID_GRANT_TYPE');
         }
     });
