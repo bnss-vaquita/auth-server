@@ -7,9 +7,9 @@ const jwt = require('jsonwebtoken');
 const tfaManager = require('./tfamanager').manager;
 
 const app = express();
-const ip = '127.0.1.1';
-const http_port = 3000;
-const https_port = 3443;
+const ip = process.env.IP || '127.0.1.1';
+const http_port = process.env.HTTP_PORT || 3000;
+const https_port = process.env.HTTPS_PORT || 3443;
 
 const KEY_DIR = process.env.KEY_DIR || 'keys';
 const CRT = process.env.CRT_NAME || 'auth.acme.com.crt';

@@ -37,7 +37,7 @@ const payload = (data = {}) => (
 
 // Evaluate the password grant
 const eval_pass_grant = (request) => {
-    const audience = request.audience || 'resc.acme.com',
+    const audience = request.audience || 'rs.acme.com',
         client_id = request.client_id,
         client_secret = request.client_secret,
         username = request.username,
@@ -49,18 +49,15 @@ const eval_pass_grant = (request) => {
             if (!creds.verify(client_id, client_secret, client_db)) {
                 reject('INVALID_CLIENT_CREDS');
             }
-            if (audience != 'resc.acme.com') {
+            if (audience != 'rs.acme.com') {
                 reject('INVALID_AUDIENCE');
             }
-            console.log(`verifying ${username}`);
             creds.verify_user(username, password)
                 .then(_ => {
-                    console.log(`PASSWORD CORRECT!`);
                     const options = signOptions(subject, audience);
                     resolve(options)
                 })
                 .catch( _ => {
-                    console.log(`PASSWORD INCORRECT!`);
                     reject('INVALID_USER_CREDS')
                 });
         } else {
@@ -91,7 +88,6 @@ exports.auth = (request) =>
                     });
                 break;
             default:
-                console.log(request.grant_type);
                 reject('INVALID_GRANT_TYPE');
         }
     });
